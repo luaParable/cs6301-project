@@ -1,27 +1,27 @@
-from flask import Flask, render_template, request, jsonify, session
+import eventlet
+# MUST be first - before any other imports
+eventlet.monkey_patch()
+
+import ssl
+import os
+from flask import Flask, render_template, request, jsonify, session, redirect
 from flask_socketio import SocketIO, emit, join_room, leave_room
 from flask_cors import CORS
 from datetime import datetime, timedelta
 import json
 import base64
 import secrets
-from functools import wraps
 from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.primitives.asymmetric import ec
 from cryptography.hazmat.backends import default_backend
 from cryptography.exceptions import InvalidSignature
 import uuid
-import ssl
-import eventlet
-
-# Patch for eventlet SSL support
-eventlet.monkey_patch()
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = secrets.token_urlsafe(32)
 CORS(app, origins="*")
 
-# Initialize SocketIO without async_mode for eventlet
+# Initialize SocketIO
 socketio = SocketIO(app, cors_allowed_origins="*")
 
 # Store active authentication requests
@@ -181,21 +181,17 @@ def dashboard():
     return render_template('dashboard.html', user_id=session.get('user_id'))
 
 if __name__ == '__main__':
-    # Create SSL context for development
-    context = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH)
+    # Check if certificates exist
+    cert_exists = os.path.exists('cert.pem') and os.path.exists('key.pem')
 
-    # For development, create self-signed certificate
-    # In production, use proper certificates
-    try:
-        context.load_cert_chain('cert.pem', 'key.pem')
-    except FileNotFoundError:
-        print("Certificate files not found. Running without SSL.")
-        print("To create self-signed certificates, run:")
-        print("openssl req -x509 -newkey rsa:4096 -keyout key.pem -out cert.pem -days 365 -nodes")
-
-        # Run without SSL for now
-        socketio.run(app, debug=True, host='0.0.0.0', port=5000)
-    else:
+    if cert_exists:
+        print("Running with HTTPS on https://192.168.4.37:5000")
         # Run with SSL
         socketio.run(app, debug=True, host='0.0.0.0', port=5000,
                      keyfile='key.pem', certfile='cert.pem')
+    else:
+        print("Running with HTTP on http://192.168.4.37:5000")
+        print("To enable HTTPS, create certificates with:")
+        print("openssl req -x509 -newkey rsa:4096 -keyout key.pem -out cert.pem -days 365 -nodes")
+        # Run without SSL
+        socketio.run(app, debug=True, host='0.0.0.0', port=5000)
