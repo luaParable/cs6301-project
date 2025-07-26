@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>TinyML Passwordless Login</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+<div class="container">
+    <h1>Passwordless Authentication</h1>
+    <div class="login-box">
+        <div id="status" class="status"></div>
+        <button id="authBtn" class="auth-button">
+            🔐 Authenticate with Biometric Device
+        </button>
+        <div class="info">
+            <p>Waiting for biometric authentication...</p>
+            <div class="spinner" id="spinner" style="display:none;"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+    let pollInterval;
+
+    document.getElementById('authBtn').addEventListener('click', async () => {
+        const statusDiv = document.getElementById('status');
+        const spinner = document.getElementById('spinner');
+
+        statusDiv.textContent = 'Waiting for biometric scan...';
+        spinner.style.display = 'block';
+
+        // Start polling for authentication
+        pollInterval = setInterval(checkAuth, 2000);
+    });
+
+    async function checkAuth() {
+        // In production, this would check for pending auth requests
+        // For demo, we'll simulate receiving a token after 5 seconds
+        setTimeout(() => {
+            clearInterval(pollInterval);
+            simulateTokenReceived();
+        }, 5000);
+    }
+
+    async function simulateTokenReceived() {
+        // This simulates receiving a token from ESP32
+        const mockToken = {
+            token: {
+                payload: btoa(JSON.stringify({
+                    user_id: 'john_doe',
+                    timestamp: new Date().toISOString(),
+                    device_id: 'device_001'
+                })),
+                signature: 'mock_signature_base64'
+            },
+            device_id: 'device_001'
+        };
+
+        try {
+            const response = await fetch('/auth/verify', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(mockToken)
+            });
+
+            const result = await response.json();
+
+            if (result.status === 'success') {
+                window.location.href = '/dashboard';
+            } else {
+                document.getElementById('status').textContent = 'Authentication failed: ' + result.message;
+            }
+        } catch (error) {
+            document.getElementById('status').textContent = 'Error: ' + error.message;
+        }
+
+        document.getElementById('spinner').style.display = 'none';
+    }
+</script>
+</body>
+</html>
