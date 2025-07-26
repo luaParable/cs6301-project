@@ -109,27 +109,13 @@ The server will be accessible at:
 - **HTTP**: `http://your.ip.address:5000` (if you want to skip SSL for testing)
 
 
-# For Yogeswar!
-
-The team member with the ESP32 camera needs to:
+# For Yogeswar! As you have the ESP32 Camera for testing.
 
 ## 1. After you have set up the system based on the README above to work with your information:
 
 ## 2. Flash ESP32
 
-Using Arduino IDE or PlatformIO:
-- Connect ESP32 via USB
-- Select correct board (ESP32-CAM or similar)
-- Select correct COM port
-- Upload the code
-
 ## 3. Start Flask Server
-
-On your computer:
-```
-cd server
-python app.py
-```
 
 ## 4. Test Authentication Flow
 
@@ -139,5 +125,3 @@ python app.py
 4. **Position yourself** in front of ESP32 camera
 5. **Watch serial monitor** (Arduino IDE: Tools > Serial Monitor, 115200 baud) for debug output
 6. **Check browser** for authentication success message
-
-The ESP32 will detect faces, generate authentication tokens, and send them to your Flask server automatically when someone looks at the camera during an active authentication request.
